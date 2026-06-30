@@ -1,18 +1,19 @@
-%% objective function to be minimized: cross-entropy error
 function e = objectiveFunction(params, data, left, right, distStd)
 H_subj = params(1);
 
-% Extract participant's choices
-beliefLeft = ([data.keyPressed] == 'F').';
+% Binary vector: 1 for Right ('J'), 0 for Left ('F')
+beliefRight = ([data.keyPressed] == 'J').';
 
-% Run the ideal observer (agent) model to calculate Bayesian belief updates
+% Cumulative LLR (positive = Right, negative = Left)
 [tmpBelief, ~] = agentBelief(data, H_subj, left, right, distStd);
 
-% Convert absolute LLR into the probability of the favored choice
-choiceProb = 1 ./ (1 + exp(tmpBelief));
+% Sigmoid transform: maps positive LLRs to high probability of Right
+choiceProbRight = 1 ./ (1 + exp(-tmpBelief));
 
+% Bound probabilities to avoid log(0)
 epsilon = 1e-10; 
-choiceProb = max(min(choiceProb, 1 - epsilon), epsilon);
+choiceProbRight = max(min(choiceProbRight, 1 - epsilon), epsilon);
 
-e = -sum((1 - beliefLeft) .* log(1 - choiceProb) + beliefLeft .* log(choiceProb));
+% Binary cross-entropy loss comparing predicted vs. actual choices
+e = -sum((1 - beliefRight) .* log(1 - choiceProbRight) + beliefRight .* log(choiceProbRight));
 end
