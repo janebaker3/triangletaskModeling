@@ -11,7 +11,7 @@ function [belief, llr_seq] = agentBelief(td, eyePos, H, m, b, ...
     probRight = normpdf(targetPos, right, distStd) ./ zRight;
 
     dist = abs(eyePos - targetPos);
-    w = max(m .* dist + b, 0);
+    w = m .* dist + b;
 
     llr_raw = log(probRight ./ probLeft);
     llr_seq = w .* llr_raw;
