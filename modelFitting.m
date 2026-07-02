@@ -13,12 +13,18 @@ numSourceSwitches = zeros(length(participantIDs), length(blocks));
 agentPart = zeros(length(participantIDs), length(blocks));
 agentTask = zeros(length(participantIDs), length(blocks));
 
+% model comparison 
+nll = zeros(length(participantIDs), length(blocks));
+heldoutNLL = zeros(length(participantIDs), length(blocks));
+
 left = 240;
 right = 1680;
 
 % Bounds for [H, w, beta]
 lb = [0.000, -2, 0]; %%%%%
 ub = [0.999, 2, 3]; %%%%%
+k = 3; % number of free parameters
+n = 6000;
 
 % fmincon options (good practice to suppress output so it runs cleaner)
 options = optimoptions('fmincon', 'Display', 'off');
@@ -154,6 +160,11 @@ for p = 1:length(participantIDs)
         subj_ms(p, b)   = fitted_params(2);
         subj_bs(p, b)   = fitted_params(3);
 
+        % store nlls
+        nll(p, b) = min_error; 
+        heldoutNLL(p, b) = computeHeldOutNLL(thisBlockTask, xP, left, right, distStd, lb, ...
+            ub, params_init, options);
+
         %% count switches
         beliefLeft = [thisBlockTask.keyPressed] == 'F';
         sourceLeft = [thisBlockTask.sourceIsLeft];
@@ -172,6 +183,9 @@ for p = 1:length(participantIDs)
     end
 end
 
+aic = 2 * k + 2 * nll;
+bic = k * log(n) + 2 * nll;
+
 colors = ['b', 'r'];
 
 fig = figure;
@@ -183,7 +197,7 @@ for b = 1:length(blocks)
     hold on
 end
 
-xlim([0 1])
+xlim([0 0.0055])
 ylim([10 40])
 xlabel('Subjective Hazard Rate')
 ylabel('Number of Belief Switches')
@@ -203,7 +217,7 @@ xlabel('Subjective Hazard Rate')
 ylabel('Number of Source Switches')
 
 close all
-%{
+
 %% plot normalized LLR with target location, participant belief
 blocks = [2 3];
 
@@ -334,8 +348,9 @@ for p = 1:length(participantIDs)
 
         belief = [td.keyPressed];
 
-        [tmpBelief, ~] = agentBelief(td, subj_Hs(p, b), left, right, distStd);
-
+        [tmpBelief, ~] = agentBelief(thisBlockTask, xP, subj_Hs(p, b), subj_ms(p, b), ...
+            subj_bs(p,b), left, right, distStd);
+        
         currBlfPlt = zeros(1, length(td));
 
         yl = [-1 1];
@@ -384,4 +399,3 @@ for p = 1:length(participantIDs)
 
     end
 end
-%}
