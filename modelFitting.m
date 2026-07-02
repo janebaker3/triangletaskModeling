@@ -202,21 +202,17 @@ ylim([10 40])
 xlabel('Subjective Hazard Rate')
 ylabel('Number of Belief Switches')
 
-f = figure;
-for b = 1:length(blocks)
-    h = subj_Hs(:, b);
-    s = numSourceSwitches(:, b);
 
-    plot(h, s, 'o', 'MarkerFaceColor', 'auto')
+for b = 1:length(blocks)
+    m = subj_ms(:, b);
+
+    plot(m, 'o', 'MarkerFaceColor', colors(b), 'MarkerEdgeColor', colors(b))
     hold on
 end
 
-xlim([0 1])
-ylim([10 40])
-xlabel('Subjective Hazard Rate')
-ylabel('Number of Source Switches')
-
+ylim([-0.01 0.01])
 close all
+
 
 %% plot normalized LLR with target location, participant belief
 blocks = [2 3];
@@ -227,14 +223,13 @@ dsFactor = 50;
 numMs = numFrames * dsFactor;
 idxs = 1:numFrames;
 
+
+%% plotting llr with participant belief, target location, fixation location c
 % Loop through each participant to extract and process eye-tracking and task data
 for p = 1:length(participantIDs)
     pid = participantIDs(p);
 
     % Add necessary toolboxes and analysis scripts to path
-    addpath(genpath('~/Desktop/triangles/analysis/eeglab2024.2.1/'))
-    addpath(genpath('../../analysis/'))
-    addpath(genpath('/Users/janebaker/Desktop/triangles/analysis/'))
     dataDir = '/Users/janebaker/Desktop/triangles/taskData/real data/';
 
     % Load Eye & Task Data for the current participant
@@ -350,7 +345,7 @@ for p = 1:length(participantIDs)
 
         [tmpBelief, ~] = agentBelief(thisBlockTask, xP, subj_Hs(p, b), subj_ms(p, b), ...
             subj_bs(p,b), left, right, distStd);
-        
+
         currBlfPlt = zeros(1, length(td));
 
         yl = [-1 1];
@@ -399,3 +394,4 @@ for p = 1:length(participantIDs)
 
     end
 end
+%}
