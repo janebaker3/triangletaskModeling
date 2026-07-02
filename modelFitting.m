@@ -26,22 +26,17 @@ ub = [0.999, 2, 3]; %%%%%
 k = 3; % number of free parameters
 n = 6000;
 
+numFrames = 6000;
+dsFactor = 50;
+numMs = numFrames * dsFactor;
+
 % fmincon options (good practice to suppress output so it runs cleaner)
 options = optimoptions('fmincon', 'Display', 'off');
 
+dataDir = '/Users/janebaker/Desktop/triangles/taskData/real data/'; 
+
 for p = 1:length(participantIDs)
     pid = participantIDs(p);
-    load(['/Users/janebaker/Desktop/triangles/taskData/real data/p' num2str(pid) '.mat']);
-
-    % Set up sampling parameters (e.g., downsampling factor to convert frames to ms)
-    numFrames = 6000;
-    dsFactor = 50;
-    numMs = numFrames * dsFactor;
-
-    % Add necessary toolboxes and analysis scripts to path
-    addpath(genpath('~/Desktop/triangles/analysis/eeglab2024.2.1/'))
-    addpath(genpath('../../analysis/'))
-    dataDir = '/Users/janebaker/Desktop/triangles/taskData/real data/';
 
     % Load Eye & Task Data for the current participant
     load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
@@ -215,22 +210,12 @@ close all
 
 
 %% plot normalized LLR with target location, participant belief
-blocks = [2 3];
-
-% Set up sampling parameters (e.g., downsampling factor to convert frames to ms)
-numFrames = 6000;
-dsFactor = 50;
-numMs = numFrames * dsFactor;
 idxs = 1:numFrames;
-
 
 %% plotting llr with participant belief, target location, fixation location c
 % Loop through each participant to extract and process eye-tracking and task data
 for p = 1:length(participantIDs)
     pid = participantIDs(p);
-
-    % Add necessary toolboxes and analysis scripts to path
-    dataDir = '/Users/janebaker/Desktop/triangles/taskData/real data/';
 
     % Load Eye & Task Data for the current participant
     load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
