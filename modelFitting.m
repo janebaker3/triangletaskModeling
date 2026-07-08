@@ -364,7 +364,7 @@ for p = 1:length(participantIDs)
 
         h3 = plot(idxs, currSrcPlt, 'o', 'MarkerSize', 3);
         h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
-        h5 = plot(idxs, nAgentBelief, 'Linewidth', 1, 'Color', 'b');
+        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 1, 'Color', 'b');
 
         yline(middle, '--', 'Color', 'k', 'LineWidth', 1)
         yline((left - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
