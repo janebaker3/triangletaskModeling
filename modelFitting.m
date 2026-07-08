@@ -328,7 +328,7 @@ for p = 1:length(participantIDs)
 
         belief = [td.keyPressed];
 
-        [tmpBelief, ~] = agentBelief(thisBlockTask, xP, subj_Hs(p, b), subj_ms(p, b), ...
+        [tmpBelief, ~] = agentBelief(td, xP, subj_Hs(p, b), subj_ms(p, b), ...
             subj_bs(p,b), left, right, distStd);
 
         currBlfPlt = zeros(1, length(td));
