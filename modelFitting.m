@@ -358,10 +358,21 @@ for p = 1:length(participantIDs)
         nTargetPos = (targetPos - middle) / halfRange;
         nAgentBelief = (tmpBelief - mean(tmpBelief, 'omitnan')) / std(tmpBelief, 'omitnan');
 
-        nAgentBelief(agree) = nan;
-        
+        % nAgentBelief(agree) = nan;
+
+        choiceProbLeft = 1 ./ (1 + exp(tmpBelief));
+        yLeft = double(partLeft);   % 1 if left, 0 if right
+        residual = yLeft - choiceProbLeft;
+
+        %{
+residual > 0: participant chose left more than model expected
+residual < 0: participant chose right more than model expected
+residual ≈ 0: participant choice aligns with model expectation
+        %}
+
         % create figure 
         fig = figure;
+        subplot(2, 1, 1)
         hold on
 
         y_lims = [-1.8, 1.8]; % Define the vertical span of the shading
@@ -372,11 +383,11 @@ for p = 1:length(participantIDs)
 
         h3 = plot(idxs, currSrcPlt, 'o', 'MarkerSize', 3);
         h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
-        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 3, 'Color', 'b');
+        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 2, 'Color', 'b');
         % h5 = plot(idxs, nAgentBelief, 'Linewidth', 3, 'Color', 'b');
 
 
-        yline(middle, '--', 'Color', 'k', 'LineWidth', 1)
+        yline(0, '--', 'Color', 'k', 'LineWidth', 1)
         yline((left - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
         yline((right - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
 
@@ -386,6 +397,12 @@ for p = 1:length(participantIDs)
         legend([h1 h2 h3 h4 h5], {'Target Position', ...
             'Fixations', 'Source', ...
             'Participant Belief', 'Agent Belief'}, 'Location', 'northeast');
+
+        subplot(2, 1, 2)
+        plot(idxs, residual)
+        yline(0, '--', 'Color', 'k', 'LineWidth', 1)
+        xlabel('frame')
+        ylabel('residual (agent choice probability - actual choice')
 
     end
 end
