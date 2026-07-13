@@ -181,6 +181,8 @@ end
 aic = 2 * k + 2 * nll;
 bic = k * log(n) + 2 * nll;
 
+
+
 colors = ['b', 'r'];
 
 fig = figure;
@@ -327,9 +329,13 @@ for p = 1:length(participantIDs)
         currSrcPlt = zeros(1, length(td));
 
         belief = [td.keyPressed];
+        partLeft = (belief == 'F')';
 
         [tmpBelief, ~] = agentBelief(td, xP, subj_Hs(p, b), subj_ms(p, b), ...
             subj_bs(p,b), left, right, distStd);
+
+        agentLeft = (tmpBelief < 0);
+        agree = agentLeft == partLeft;
 
         currBlfPlt = zeros(1, length(td));
 
@@ -351,6 +357,8 @@ for p = 1:length(participantIDs)
         % normalize
         nTargetPos = (targetPos - middle) / halfRange;
         nAgentBelief = (tmpBelief - mean(tmpBelief, 'omitnan')) / std(tmpBelief, 'omitnan');
+
+        nAgentBelief(agree) = nan;
         
         % create figure 
         fig = figure;
@@ -364,7 +372,9 @@ for p = 1:length(participantIDs)
 
         h3 = plot(idxs, currSrcPlt, 'o', 'MarkerSize', 3);
         h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
-        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 1, 'Color', 'b');
+        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 3, 'Color', 'b');
+        % h5 = plot(idxs, nAgentBelief, 'Linewidth', 3, 'Color', 'b');
+
 
         yline(middle, '--', 'Color', 'k', 'LineWidth', 1)
         yline((left - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
