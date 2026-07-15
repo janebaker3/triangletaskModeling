@@ -15,6 +15,7 @@ agentTask = zeros(length(participantIDs), length(blocks));
 % model comparison 
 nll = zeros(length(participantIDs), length(blocks));
 heldoutNLL = zeros(length(participantIDs), length(blocks));
+avgResiduals = zeros(length(participantIDs), length(blocks));
 
 left = 240;
 right = 1680;
@@ -361,6 +362,7 @@ for p = 1:length(participantIDs)
         choiceProbLeft = 1 ./ (1 + exp(tmpBelief));
         yLeft = double(partLeft);   % 1 if left, 0 if right
         residual = yLeft - choiceProbLeft;
+        avgResiduals(p, b) = mean(abs(residual)); 
 
         %{
 residual > 0: participant chose left more than model expected
