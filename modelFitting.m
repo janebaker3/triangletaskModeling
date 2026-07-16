@@ -89,8 +89,6 @@ for p = 1:length(participantIDs)
     % Calculate spatial references based on target locations
     leftMean = data(1).centers;
     rightMean = data(2).centers;
-    middle = mean([leftMean, rightMean]);
-    halfRange = (rightMean - leftMean) / 2;
 
     for b = 1:length(blocks)
         distStd = stds(b);
@@ -273,6 +271,8 @@ for p = 1:length(participantIDs)
 
     middle = mean([left, right]);
     halfRange = (right - left) / 2;
+    normalizeX = @(x) (x - middle) / halfRange;
+
 
     % Loop through Block 2 (Low Uncertainty) and Block 3 (High Uncertainty)
     for b = 1:length(blocks)
@@ -322,7 +322,7 @@ for p = 1:length(participantIDs)
         filtered = xP; filtered(isSac | isBlink) = nan;
 
         % Normalize gaze so that -1 is the Left target and +1 is the Right target
-        nFiltered = (filtered - middle) / halfRange;
+        nFiltered = normalizeX(filtered);
 
         % get relevant block values
         targetPos = [td.targetX];
@@ -331,12 +331,15 @@ for p = 1:length(participantIDs)
 
         belief = [td.keyPressed];
         partLeft = (belief == 'F')';
+        beliefMean = zeros(length(td), 1);
+        beliefMean(find(partLeft)) = left;
+        beliefMean(find(~partLeft)) = right; 
 
         [tmpBelief, ~] = agentBelief(td, xP, subj_Hs(p, b), subj_ms(p, b), ...
             subj_bs(p,b), left, right, distStd);
 
         agentLeft = (tmpBelief < 0);
-        agree = agentLeft == partLeft;
+        disagree = right .* ~(agentLeft == partLeft);
 
         currBlfPlt = zeros(1, length(td));
 
@@ -356,25 +359,24 @@ for p = 1:length(participantIDs)
         end
 
         % normalize
-        nTargetPos = (targetPos - middle) / halfRange;
+        nTargetPos = normalizeX(targetPos);
         nAgentBelief = (tmpBelief - mean(tmpBelief, 'omitnan')) / std(tmpBelief, 'omitnan');
 
-        % nAgentBelief(agree) = nan;
+
+        
 
         choiceProbLeft = 1 ./ (1 + exp(tmpBelief));
         yLeft = double(partLeft);   % 1 if left, 0 if right
         residual = yLeft - choiceProbLeft;
         avgResiduals(p, b) = mean(abs(residual)); 
 
-        %{
-residual > 0: participant chose left more than model expected
-residual < 0: participant chose right more than model expected
-residual ≈ 0: participant choice aligns with model expectation
-        %}
+        % calculate difference between gaze and current belief
+        gazeSourceDiff = abs(filtered - beliefMean);
+        nGSD = normalize(gazeSourceDiff);
 
         % create figure 
         fig = figure;
-        %subplot(2, 1, 1)
+        subplot(2, 1, 1)
         hold on
 
         y_lims = [-1.8, 1.8]; % Define the vertical span of the shading
@@ -387,26 +389,28 @@ residual ≈ 0: participant choice aligns with model expectation
         h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
         h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 2, 'Color', 'b');
         % h5 = plot(idxs, nAgentBelief, 'Linewidth', 3, 'Color', 'b');
+        % h6 = plot(idxs, nGSD, 'Linewidth', 2, 'Color', 'r');
 
 
         yline(0, '--', 'Color', 'k', 'LineWidth', 1)
-        yline((left - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
-        yline((right - middle)/halfRange, '-', 'Color', 'k', 'LineWidth', 1)
+        yline(normalize(left), '-', 'Color', 'k', 'LineWidth', 1)
+        yline(normalize(right), '-', 'Color', 'k', 'LineWidth', 1)
 
         xlim([0 6000])
         ylim(y_lims)
 
-        legend([h1 h2 h3 h4 h5], {'Target Position', ...
-            'Fixations', 'Source', ...
-            'Participant Belief', 'Agent Belief'}, 'Location', 'northeast');
+        % legend([h1 h2 h3 h4 h5], {'Target Position', ...
+        %     'Fixations', 'Source', ...
+        %     'Participant Belief', 'Agent Belief'}, 'Location', 'northeast');
          
-        % subplot(2, 1, 2)
-        % plot(idxs, residual)
-        % yline(0, '--', 'Color', 'k', 'LineWidth', 1)
-        % xlabel('frame')
-        % ylabel('residual (agent choice probability - actual choice')
+        subplot(2, 1, 2)
+        hold on
+        plot(idxs, disagree, 'Linewidth', 1, 'Color', 'b');
+        plot(idxs, gazeSourceDiff, 'Linewidth', 2, 'Color', 'r');
+        yline(0, '--', 'Color', 'k', 'LineWidth', 1)
+        xlabel('frame')
+        ylabel('residual (belief mean - gaze location')
 
     end
 end
-
 %}
