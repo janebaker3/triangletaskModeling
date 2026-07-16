@@ -1,4 +1,4 @@
-function [belief, llr_seq] = agentBelief(td, eyePos, H, w, ...
+function [belief, llr_seq] = agentBelief(td, eyePos, H, m, b, ...
     left, right, distStd)
 
     belief    = zeros(length(td), 1);
@@ -9,6 +9,9 @@ function [belief, llr_seq] = agentBelief(td, eyePos, H, w, ...
 
     probLeft  = normpdf(targetPos, left,  distStd) ./ zLeft;
     probRight = normpdf(targetPos, right, distStd) ./ zRight;
+
+    dist = abs(eyePos - targetPos);
+    w = m .* dist + b;
 
     llr_raw = log(probRight ./ probLeft);
     llr_seq = w .* llr_raw;

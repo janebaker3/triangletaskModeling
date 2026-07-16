@@ -1,12 +1,13 @@
 function e = objectiveFunction(params, data, eyePos, left, right, distStd)
 H_subj = params(1);
-w = params(2); 
+m = params(2); 
+b = params(3); 
 
 % Binary vector: 1 for Right ('J'), 0 for Left ('F')
 beliefRight = ([data.keyPressed] == 'J').';
 
 % Cumulative LLR (positive = Right, negative = Left)
-[tmpBelief, ~] = agentBelief(data, eyePos, H_subj, w, ...
+[tmpBelief, ~] = agentBelief(data, eyePos, H_subj, m, b, ...
     left, right, distStd);
 
 % Sigmoid transform: maps positive LLRs to high probability of Right
