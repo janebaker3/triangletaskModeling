@@ -37,18 +37,18 @@ options = optimoptions('fmincon', 'Display', 'off');
 dataDir = '/Users/janebaker/Desktop/triangles/taskData/real data/';
 
 % --- Disagreement analyses ---
-allConf = [];
-allDisagree = [];
-allGazeLeft = [];
-allPartLeft = [];
-allAgentLeft = [];
-allSourceLeft = [];
-allBeliefShift = [];
-allSourceShift = [];
+allConf = cell(1, length(blocks));
+allDisagree = cell(1, length(blocks));
+allGazeLeft = cell(1, length(blocks));
+allPartLeft = cell(1, length(blocks));
+allAgentLeft = cell(1, length(blocks));
+allSourceLeft = cell(1, length(blocks));
+allBeliefShift = cell(1, length(blocks));
+allSourceShift = cell(1, length(blocks));
 
 win = -20:20;   % window around switches
-partSwitchMat = [];
-sourceSwitchMat = [];
+partSwitchMat = cell(1, length(blocks));
+sourceSwitchMat = cell(1, length(blocks));
 
 % store subject/block summaries if you want
 meanConf_disagree = nan(length(participantIDs), length(blocks));
@@ -393,14 +393,14 @@ for p = 1:length(participantIDs)
         meanConf_agree(p,b)    = mean(conf(~disagree), 'omitnan');
 
         % append trialwise data across all participants/blocks
-        allConf         = [allConf; conf];
-        allDisagree     = [allDisagree; disagree];
-        allGazeLeft     = [allGazeLeft; gazeLeft];
-        allPartLeft     = [allPartLeft; partLeft];
-        allAgentLeft    = [allAgentLeft; agentLeft];
-        allSourceLeft   = [allSourceLeft; currentSource];
-        allBeliefShift  = [allBeliefShift; beliefShift];
-        allSourceShift  = [allSourceShift; sourceShift];
+        allConf{b}         = [allConf{b}; conf];
+        allDisagree{b}     = [allDisagree{b}; disagree];
+        allGazeLeft{b}     = [allGazeLeft{b}; gazeLeft];
+        allPartLeft{b}     = [allPartLeft{b}; partLeft];
+        allAgentLeft{b}    = [allAgentLeft{b}; agentLeft];
+        allSourceLeft{b}   = [allSourceLeft{b}; currentSource];
+        allBeliefShift{b}  = [allBeliefShift{b}; beliefShift];
+        allSourceShift{b}  = [allSourceShift{b}; sourceShift];
 
         % ---------------------------------------------
         % 2. disagreement around participant switches
@@ -415,7 +415,7 @@ for p = 1:length(participantIDs)
         end
 
         if ~isempty(tmpMat)
-            partSwitchMat = [partSwitchMat; tmpMat];
+            partSwitchMat{b} = [partSwitchMat{b}; tmpMat];
         end
 
         % ----------------------------------------
@@ -431,7 +431,7 @@ for p = 1:length(participantIDs)
         end
 
         if ~isempty(tmpMat)
-            sourceSwitchMat = [sourceSwitchMat; tmpMat];
+            sourceSwitchMat{b} = [sourceSwitchMat{b}; tmpMat];
         end
 
         % ----------------------------------------------------------
@@ -529,55 +529,67 @@ end
 
 % disagreement vs confidence
 figure;
-edges = linspace(min(allConf), max(allConf), 12);
-[~,~,bin] = histcounts(allConf, edges);
+for b = 1:length(blocks)
+    subplot(1,2,b)
+    edges = linspace(min(allConf{b}), max(allConf{b}), 12);
+    [~,~,bin] = histcounts(allConf{b}, edges);
 
-pDisagree = nan(length(edges)-1,1);
-binCtrs = (edges(1:end-1) + edges(2:end))/2;
+    pDisagree = nan(length(edges)-1,1);
+    binCtrs = (edges(1:end-1) + edges(2:end))/2;
 
-for i = 1:length(pDisagree)
-    pDisagree(i) = mean(allDisagree(bin==i), 'omitnan');
+    for i = 1:length(pDisagree)
+        pDisagree(i) = mean(allDisagree{b}(bin==i), 'omitnan');
+    end
+
+    plot(binCtrs, pDisagree, '-o', 'LineWidth', 2)
+    xlabel('|Agent belief|')
+    ylabel('P(disagreement)')
+    title(sprintf('Disagreement vs agent confidence - Block %d', b))
+    ylim([0 1])
+    grid on
 end
-
-plot(binCtrs, pDisagree, '-o', 'LineWidth', 2)
-xlabel('|Agent belief|')
-ylabel('P(disagreement)')
-title('Disagreement vs agent confidence')
-ylim([0 1])
-grid on
 
 % disagreement and belief switches
 figure;
-plot(win, mean(partSwitchMat, 1, 'omitnan'), 'LineWidth', 2)
-xlabel('Trials relative to participant switch')
-ylabel('P(disagreement)')
-title('Disagreement around participant belief switches')
-ylim([0 1])
-grid on
+for b = 1:length(blocks)
+    subplot(1,2,b)
+    plot(win, mean(partSwitchMat{b}, 1, 'omitnan'), 'LineWidth', 2)
+    xlabel('Trials relative to participant switch')
+    ylabel('P(disagreement)')
+    title(sprintf('Disagreement around participant belief switches - Block %d', b))
+    ylim([0 1])
+    grid on
+end
 
 % disagreement and source switches
 figure;
-plot(win, mean(sourceSwitchMat, 1, 'omitnan'), 'LineWidth', 2)
-xlabel('Trials relative to source switch')
-ylabel('P(disagreement)')
-title('Disagreement around true source switches')
-ylim([0 1])
-grid on
+for b = 1:length(blocks)
+    subplot(1,2,b)
+    plot(win, mean(sourceSwitchMat{b}, 1, 'omitnan'), 'LineWidth', 2)
+    xlabel('Trials relative to source switch')
+    ylabel('P(disagreement)')
+    title(sprintf('Disagreement around true source switches - Block %d', b))
+    ylim([0 1])
+    grid on
+end
 
 % does gaze align w agent or participant or source on disagreement
 figure;
-vals = [
-    mean(gazeAlign_participant, 'all', 'omitnan'), ...
-    mean(gazeAlign_agent, 'all', 'omitnan'), ...
-    mean(gazeAlign_source, 'all', 'omitnan')
-    ];
+for b = 1:length(blocks)
+    subplot(1,2,b)
+    vals = [
+        mean(gazeAlign_participant(:,b), 'omitnan'), ...
+        mean(gazeAlign_agent(:,b), 'omitnan'), ...
+        mean(gazeAlign_source(:,b), 'omitnan')
+        ];
 
-bar(vals)
-set(gca, 'XTickLabel', {'Participant', 'Agent', 'Source'})
-ylabel('P(gaze side matches)')
-title('On disagreement trials, what does gaze align with?')
-ylim([0 1])
-grid on
+    bar(vals)
+    set(gca, 'XTickLabel', {'Participant', 'Agent', 'Source'})
+    ylabel('P(gaze side matches)')
+    title(sprintf('On disagreement trials, what does gaze align with? - Block %d', b))
+    ylim([0 1])
+    grid on
+end
 
 plotMat = [meanConf_disagree(:,1), meanConf_agree(:,1), ...
            meanConf_disagree(:,2), meanConf_agree(:,2)];
