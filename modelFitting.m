@@ -339,7 +339,7 @@ for p = 1:length(participantIDs)
             subj_bs(p,b), left, right, distStd);
 
         agentLeft = (tmpBelief < 0);
-        disagree = right .* ~(agentLeft == partLeft);
+        disagree = ~(agentLeft == partLeft);
 
         currBlfPlt = zeros(1, length(td));
 
@@ -373,6 +373,9 @@ for p = 1:length(participantIDs)
         % calculate difference between gaze and current belief
         gazeSourceDiff = abs(filtered - beliefMean);
         nGSD = normalize(gazeSourceDiff);
+        simpGSD = zeros(length(td), 1);
+        simpGSD(find(gazeSourceDiff > middle)) = right - 100;
+        simpGSD(find(gazeSourceDiff < middle)) = left + 100;
 
         % create figure 
         fig = figure;
@@ -393,8 +396,8 @@ for p = 1:length(participantIDs)
 
 
         yline(0, '--', 'Color', 'k', 'LineWidth', 1)
-        yline(normalize(left), '-', 'Color', 'k', 'LineWidth', 1)
-        yline(normalize(right), '-', 'Color', 'k', 'LineWidth', 1)
+        yline(normalizeX(left), '-', 'Color', 'k', 'LineWidth', 1)
+        yline(normalizeX(right), '-', 'Color', 'k', 'LineWidth', 1)
 
         xlim([0 6000])
         ylim(y_lims)
@@ -405,12 +408,20 @@ for p = 1:length(participantIDs)
          
         subplot(2, 1, 2)
         hold on
-        plot(idxs, disagree, 'Linewidth', 1, 'Color', 'b');
-        plot(idxs, gazeSourceDiff, 'Linewidth', 2, 'Color', 'r');
+        yl2 = [-0.1 1800];   % temporary/fixed y-limits for shading; adjust if needed
+        for t = 1:length(disagree)
+            if disagree(t)
+                patch([idxs(t)-0.5 idxs(t)+0.5 idxs(t)+0.5 idxs(t)-0.5], ...
+                    [yl2(1) yl2(1) yl2(2) yl2(2)], ...
+                    [1 0.85 0.85], 'EdgeColor', 'none', 'FaceAlpha', 0.4);
+            end
+        end
+
+        plot(idxs, gazeSourceDiff, 'Linewidth', 1, 'Color', 'r');
         yline(0, '--', 'Color', 'k', 'LineWidth', 1)
         xlabel('frame')
         ylabel('residual (belief mean - gaze location')
-
+        ylim([-0.1 1800])
     end
 end
 %}
