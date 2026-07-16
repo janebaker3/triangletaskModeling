@@ -5,8 +5,7 @@ stds = [480, 800];
 
 % Preallocate arrays for the THREE fitted parameters
 subj_Hs   = zeros(length(participantIDs), length(blocks));
-subj_ms   = zeros(length(participantIDs), length(blocks));
-subj_bs   = zeros(length(participantIDs), length(blocks));
+subj_ws   = zeros(length(participantIDs), length(blocks));
 
 numBeliefSwitches = zeros(length(participantIDs), length(blocks));
 numSourceSwitches = zeros(length(participantIDs), length(blocks));
@@ -22,9 +21,9 @@ left = 240;
 right = 1680;
 
 % Bounds for [H, w, beta]
-lb = [0.000, -2, 0]; %%%%%
-ub = [0.999, 2, 3]; %%%%%
-k = 3; % number of free parameters
+lb = [0.000, -2]; %%%%%
+ub = [0.999, 4]; %%%%%
+k = 2; % number of free parameters
 n = 6000;
 
 numFrames = 6000;
@@ -136,7 +135,7 @@ for p = 1:length(participantIDs)
 
         %% Optimization
         % Initial guesses (true H = 0.003)
-        params_init = [0.003, 0, 1]; %%%%%
+        params_init = [0.003, 0]; %%%%%
 
         objFunc = @(params) objectiveFunction(params, thisBlockTask, xP, ...
             left, right, distStd);
@@ -147,17 +146,15 @@ for p = 1:length(participantIDs)
 
         % Store fitted parameters
         hFit = fitted_params(1);
-        mFit = fitted_params(2);
-        bFit = fitted_params(3);
+        wFit = fitted_params(2);
 
         subj_Hs(p, b)   = fitted_params(1);
-        subj_ms(p, b)   = fitted_params(2);
-        subj_bs(p, b)   = fitted_params(3);
+        subj_ws(p, b)   = fitted_params(2);
 
         % store nlls
         nll(p, b) = min_error; 
-        heldoutNLL(p, b) = computeHeldOutNLL(thisBlockTask, xP, left, right, distStd, lb, ...
-            ub, params_init, options);
+        % heldoutNLL(p, b) = computeHeldOutNLL(thisBlockTask, xP, left, right, distStd, lb, ...
+        %     ub, params_init, options);
 
         %% count switches
         beliefLeft = [thisBlockTask.keyPressed] == 'F';
@@ -168,7 +165,7 @@ for p = 1:length(participantIDs)
 
         %% model accuracy
         [tmpBelief, llr_seq] = agentBelief(thisBlockTask, xP, hFit, ...
-            mFit, bFit, left, right, distStd);  %%%%%
+            wFit, left, right, distStd);  %%%%%
         tmpBelief = tmpBelief.';
         agentLeft = (tmpBelief < 0);
         agentPart(p, b) = sum(beliefLeft == agentLeft) / length(agentLeft);
@@ -200,7 +197,7 @@ ylabel('Number of Belief Switches')
 
 
 for b = 1:length(blocks)
-    m = subj_ms(:, b);
+    m = subj_ws(:, b);
 
     plot(m, 'o', 'MarkerFaceColor', colors(b), 'MarkerEdgeColor', colors(b))
     hold on
@@ -335,8 +332,8 @@ for p = 1:length(participantIDs)
         beliefMean(find(partLeft)) = left;
         beliefMean(find(~partLeft)) = right; 
 
-        [tmpBelief, ~] = agentBelief(td, xP, subj_Hs(p, b), subj_ms(p, b), ...
-            subj_bs(p,b), left, right, distStd);
+        [tmpBelief, ~] = agentBelief(td, xP, subj_Hs(p, b), subj_ws(p, b), ...
+            left, right, distStd); %%%%%
 
         agentLeft = (tmpBelief < 0);
         disagree = ~(agentLeft == partLeft);
