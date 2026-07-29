@@ -58,12 +58,15 @@ gazeAlign_participant = nan(length(participantIDs), length(blocks));
 gazeAlign_agent       = nan(length(participantIDs), length(blocks));
 gazeAlign_source      = nan(length(participantIDs), length(blocks));
 
-for p = 1:length(participantIDs)
+for p = 1%:length(participantIDs)
     pid = participantIDs(p);
 
     % Load Eye & Task Data for the current participant
-    load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
-    et = load(fullfile(dataDir, ['p' num2str(pid) '_eyeData.mat']));
+    % load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
+    % et = load(fullfile(dataDir, ['p' num2str(pid) '_eyeData.mat']));
+
+    load('/Users/janebaker/Desktop/triangles/taskData/test2.mat')
+    et = load('/Users/janebaker/Desktop/triangles/taskData/test2_eyeData.mat');
 
     % Parse eye-tracker messages to find true block start and end timestamps
     msgs = string({et.othermessages.msg});
@@ -78,8 +81,8 @@ for p = 1:length(participantIDs)
 
     % Isolate timestamps specifically for Blocks 2 (Low) and 3 (High)
     % (Indices 6 and 7 represent blocks 2 and 3 in the overarching sequence)
-    b2s = blockStarts(6); b2e = blockEnds(6);
-    b3s = blockStarts(7); b3e = blockEnds(7);
+    b2s = blockStarts(6-5); b2e = blockEnds(6-5);
+    b3s = blockStarts(7-5); b3e = blockEnds(7-5);
     eyeData = et.data;
 
     % Check if data is binocular (more than 5 columns implies left and right eye data present)
@@ -237,12 +240,14 @@ idxs = 1:numFrames;
 
 %% plotting llr with participant belief, target location, fixation location c
 % Loop through each participant to extract and process eye-tracking and task data
-for p = 1:length(participantIDs)
+for p = 1%:length(participantIDs)
     pid = participantIDs(p);
 
     % Load Eye & Task Data for the current participant
-    load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
-    et = load(fullfile(dataDir, ['p' num2str(pid) '_eyeData.mat']));
+    % load(fullfile(dataDir, ['p' num2str(pid) '.mat']));
+    % et = load(fullfile(dataDir, ['p' num2str(pid) '_eyeData.mat']));
+    load('/Users/janebaker/Desktop/triangles/taskData/test2.mat')
+    et = load('/Users/janebaker/Desktop/triangles/taskData/test2_eyeData.mat');
 
     % Parse eye-tracker messages to find true block start and end timestamps
     msgs = string({et.othermessages.msg});
@@ -258,8 +263,8 @@ for p = 1:length(participantIDs)
 
     % Isolate timestamps specifically for Blocks 2 (Low) and 3 (High)
     % (Indices 6 and 7 represent blocks 2 and 3 in the overarching sequence)
-    b2s = blockStarts(6); b2e = blockEnds(6);
-    b3s = blockStarts(7); b3e = blockEnds(7);
+    b2s = blockStarts(6-5); b2e = blockEnds(6-5);
+    b3s = blockStarts(7-5); b3e = blockEnds(7-5);
 
     eyeData = et.data;
     % Check if data is binocular (more than 5 columns implies left and right eye data present)
@@ -295,6 +300,7 @@ for p = 1:length(participantIDs)
     halfRange = (right - left) / 2;
     normalizeX = @(x) (x - middle) / halfRange;
 
+    titles = ["H = 0.003", "H = 0.01"];
 
     % Loop through Block 2 (Low Uncertainty) and Block 3 (High Uncertainty)
     for b = 1:length(blocks)
@@ -480,53 +486,38 @@ for p = 1:length(participantIDs)
         simpGSD(find(gazeSourceDiff < middle)) = left + 100;
 
         %% create figure
-        % fig = figure;
-        % subplot(2, 1, 1)
-        % hold on
-        %
-        % y_lims = [-1.8, 1.8]; % Define the vertical span of the shading
-        %
-        % lb = [0.6 0.8 1];
-        % h1 = plot(idxs, nTargetPos, 'LineWidth', 0.5, 'Color', lb);
-        % h2 = plot(idxs, nFiltered, 'o', 'markerSize', 3, 'Color', 'k');
-        %
-        % h3 = plot(idxs, currSrcPlt, 'o', 'MarkerSize', 3);
-        % h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
-        % h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 2, 'Color', 'b');
-        % % h5 = plot(idxs, nAgentBelief, 'Linewidth', 3, 'Color', 'b');
-        % % h6 = plot(idxs, nGSD, 'Linewidth', 2, 'Color', 'r');
-        %
-        %
-        % yline(0, '--', 'Color', 'k', 'LineWidth', 1)
-        % yline(normalizeX(left), '-', 'Color', 'k', 'LineWidth', 1)
-        % yline(normalizeX(right), '-', 'Color', 'k', 'LineWidth', 1)
-        %
-        % xlim([0 6000])
-        % ylim(y_lims)
-        %
-        % % legend([h1 h2 h3 h4 h5], {'Target Position', ...
-        % %     'Fixations', 'Source', ...
-        % %     'Participant Belief', 'Agent Belief'}, 'Location', 'northeast');
-        %
-        % subplot(2, 1, 2)
-        % hold on
-        % yl2 = [-0.1 1800];   % temporary/fixed y-limits for shading; adjust if needed
-        % for t = 1:length(disagree)
-        %     if disagree(t)
-        %         patch([idxs(t)-0.5 idxs(t)+0.5 idxs(t)+0.5 idxs(t)-0.5], ...
-        %             [yl2(1) yl2(1) yl2(2) yl2(2)], ...
-        %             [1 0.85 0.85], 'EdgeColor', 'none', 'FaceAlpha', 0.4);
-        %     end
-        % end
-        %
-        % plot(idxs, gazeSourceDiff, 'Linewidth', 1, 'Color', 'r');
-        % yline(0, '--', 'Color', 'k', 'LineWidth', 1)
-        % xlabel('frame')
-        % ylabel('residual (belief mean - gaze location')
-        % ylim([-0.1 1800])
+        fig = figure;
+        hold on
+
+        y_lims = [-1.8, 1.8]; % Define the vertical span of the shading
+
+        lb = [0.6 0.8 1];
+        h1 = plot(idxs, nTargetPos, 'LineWidth', 0.5, 'Color', lb);
+        h2 = plot(idxs, nFiltered, 'o', 'markerSize', 3, 'Color', 'k');
+
+        h3 = plot(idxs, currSrcPlt, 'o', 'MarkerSize', 3);
+        h4 = plot(idxs, currBlfPlt, 'o', 'MarkerSize', 3);
+        h5 = plot(idxs, tanh(nAgentBelief), 'Linewidth', 2, 'Color', 'b');
+        % h5 = plot(idxs, nAgentBelief, 'Linewidth', 3, 'Color', 'b');
+        % h6 = plot(idxs, nGSD, 'Linewidth', 2, 'Color', 'r');
+
+
+        yline(0, '--', 'Color', 'k', 'LineWidth', 1)
+        yline(normalizeX(left), '-', 'Color', 'k', 'LineWidth', 1)
+        yline(normalizeX(right), '-', 'Color', 'k', 'LineWidth', 1)
+
+        xlim([0 6000])
+        ylim(y_lims)
+        title(titles(b))
+
+        legend([h1 h2 h3 h4 h5], {'Target Position', ...
+            'Fixations', 'Source', ...
+            'Participant Belief', 'Agent Belief'}, 'Location', 'northeast');
+
     end
 end
 
+%{
 % disagreement vs confidence
 figure;
 for b = 1:length(blocks)
